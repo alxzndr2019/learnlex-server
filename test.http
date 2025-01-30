@@ -1,0 +1,7 @@
+POST http://localhost:9999/api/videos
+Content-Type: application/json
+
+{
+  "url": "https://www.youtube.com/watch?v=HESOat2iPzU",
+  "userId": "666666666666666666666666"
+}
