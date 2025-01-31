@@ -12,34 +12,30 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 18
-
-      - name: Install dependencies
-        run: npm install
-
-      - name: Deploy to OCI
-        env:
-          SSH_PRIVATE_KEY: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
-          OCI_INSTANCE_IP: ${{ secrets.OCI_INSTANCE_IP }}
+      - name: Validate Secrets
         run: |
-          # Ensure the key is formatted properly
-          echo "$SSH_PRIVATE_KEY" > private_key
+          if [ -z "${{ secrets.OCI_SSH_PRIVATE_KEY }}" ]; then
+            echo "OCI_SSH_PRIVATE_KEY secret is missing!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.OCI_INSTANCE_IP }}" ]; then
+            echo "OCI_INSTANCE_IP secret is missing!"
+            exit 1
+          fi
+
+      - name: Set up SSH
+        run: |
+          echo "${{ secrets.OCI_SSH_PRIVATE_KEY }}" > private_key
           chmod 600 private_key
+          ssh-keyscan ${{ secrets.OCI_INSTANCE_IP }} >> ~/.ssh/known_hosts
 
-          # Debugging: Check if IP is set
-          echo "Connecting to OCI instance at $OCI_INSTANCE_IP..."
-
-          # Add the OCI instance to known hosts
-          ssh-keyscan -H $OCI_INSTANCE_IP >> ~/.ssh/known_hosts
-
-          # Connect and deploy
-          ssh -i private_key opc@$OCI_INSTANCE_IP << 'EOF'
+      - name: Deploy to OCI Instance
+        run: |
+          ssh -i private_key opc@${{ secrets.OCI_INSTANCE_IP }} << 'ENDSSH'
             cd /home/opc/learnlex-server
-            git pull origin main
-            npm install
-            npm run build  # Modify if needed
-            pm2 restart all  # If using PM2
-          EOF
+            git fetch origin main
+            git reset --hard origin/main
+            npm ci --omit=dev
+            npm run build
+            pm2 reload all
+          ENDSSH
