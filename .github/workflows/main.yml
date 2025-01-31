@@ -3,7 +3,7 @@ name: Deploy to OCI
 on:
   push:
     branches:
-      - main  # Change this to match your deployment branch
+      - main
 
 jobs:
   deploy:
@@ -20,19 +20,26 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # - name: Build the app (if applicable)
-      #   run: npm run build  # Change based on your project
-
       - name: Deploy to OCI
         env:
           SSH_PRIVATE_KEY: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
           OCI_INSTANCE_IP: ${{ secrets.OCI_INSTANCE_IP }}
         run: |
-          echo "$SSH_PRIVATE_KEY" > private_key && chmod 600 private_key
-          ssh -o StrictHostKeyChecking=no -i private_key opc@$OCI_INSTANCE_IP << 'EOF'
+          # Ensure the key is formatted properly
+          echo "$SSH_PRIVATE_KEY" > private_key
+          chmod 600 private_key
+
+          # Debugging: Check if IP is set
+          echo "Connecting to OCI instance at $OCI_INSTANCE_IP..."
+
+          # Add the OCI instance to known hosts
+          ssh-keyscan -H $OCI_INSTANCE_IP >> ~/.ssh/known_hosts
+
+          # Connect and deploy
+          ssh -i private_key opc@$OCI_INSTANCE_IP << 'EOF'
             cd /home/opc/learnlex-server
             git pull origin main
             npm install
-            npm run build  # Modify based on your setup
+            npm run build  # Modify if needed
             pm2 restart all  # If using PM2
           EOF
