@@ -1,0 +1,49 @@
+name: Deploy to OCI
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Validate Secrets
+        run: |
+          if [ -z "${{ secrets.OCI_SSH_PRIVATE_KEY }}" ]; then
+            echo "OCI_SSH_PRIVATE_KEY secret is missing!"
+            exit 1
+          fi
+          if [ -z "${{ secrets.OCI_INSTANCE_IP }}" ]; then
+            echo "OCI_INSTANCE_IP secret is missing!"
+            exit 1
+          fi
+
+      - name: Set up SSH
+        run: |
+          echo "${{ secrets.OCI_SSH_PRIVATE_KEY }}" > private_key
+          chmod 600 private_key
+
+          # Ensure ~/.ssh exists before writing known_hosts
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
+          ssh-keyscan ${{ secrets.OCI_INSTANCE_IP }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Deploy to OCI Instance
+        run: |
+          ssh -i private_key opc@${{ secrets.OCI_INSTANCE_IP }} << 'ENDSSH'
+            cd /home/opc/learnlex-server
+            git fetch origin main
+            git reset --hard origin/main
+            npm ci --omit=dev
+            npm i 
+            npm i reflect-metadata
+            pm2 reload all
+            pm2 save
+          ENDSSH
