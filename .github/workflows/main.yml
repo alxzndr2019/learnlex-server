@@ -27,7 +27,13 @@ jobs:
         run: |
           echo "${{ secrets.OCI_SSH_PRIVATE_KEY }}" > private_key
           chmod 600 private_key
+
+          # Ensure ~/.ssh exists before writing known_hosts
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+
           ssh-keyscan ${{ secrets.OCI_INSTANCE_IP }} >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
 
       - name: Deploy to OCI Instance
         run: |
