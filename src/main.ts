@@ -5,7 +5,7 @@ const cors = require("cors");
 import { container } from "tsyringe";
 import { VideoController } from "./presentation/controllers/video.controller";
 import { AuthController } from "./presentation/controllers/auth.controller";
-import { config } from "../config";
+import { config } from "./config";
 import { MongoVideoSessionRepository } from "./infrastructure/database/mongodb/repositories/video-session-repository";
 import { MongoUserRepository } from "./infrastructure/database/mongodb/repositories/user-repository";
 import { YoutubeApiService } from "./infrastructure/external/youtube-service";

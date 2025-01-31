@@ -3,7 +3,7 @@ import { injectable, inject } from "tsyringe";
 import { OAuth2Client } from "google-auth-library";
 import { UserRepository } from "../../application/interfaces/user-repository";
 import jwt from "jsonwebtoken";
-import { config } from "../../../config";
+import { config } from "../../config";
 
 @injectable()
 export class AuthController {
