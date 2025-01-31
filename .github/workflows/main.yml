@@ -1,0 +1,38 @@
+name: Deploy to OCI
+
+on:
+  push:
+    branches:
+      - main  # Change this to match your deployment branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build the app (if applicable)
+        run: npm run build  # Change based on your project
+
+      - name: Deploy to OCI
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.OCI_SSH_PRIVATE_KEY }}
+          OCI_INSTANCE_IP: ${{ secrets.OCI_INSTANCE_IP }}
+        run: |
+          echo "$SSH_PRIVATE_KEY" > private_key && chmod 600 private_key
+          ssh -o StrictHostKeyChecking=no -i private_key opc@$OCI_INSTANCE_IP << 'EOF'
+            cd /home/opc/your-app-directory
+            git pull origin main
+            npm install
+            npm run build  # Modify based on your setup
+            pm2 restart all  # If using PM2
+          EOF
