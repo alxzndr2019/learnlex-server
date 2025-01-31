@@ -13,6 +13,8 @@ import { OpenAIService } from "./infrastructure/external/openai-service";
 import { ProcessVideoUseCase } from "./application/use-cases/process-video";
 import { createVideoRouter } from "./presentation/routes/video.routes";
 import { createAuthRouter } from "./presentation/routes/auth.routes";
+import { loggingMiddleware } from "./presentation/middlewares/logging";
+import logger from "./utils/logger";
 
 // Configure DI
 container.register("VideoSessionRepository", {
@@ -32,36 +34,47 @@ container.register("AIService", {
 });
 
 async function bootstrap() {
-  // Connect to MongoDB
-  await mongoose.connect(config.mongoUri);
+  try {
+    // Connect to MongoDB
+    await mongoose.connect(config.mongoUri);
+    logger.info("Connected to MongoDB successfully");
 
-  const app = express();
-  app.use(express.json());
+    const app = express();
 
-  // Initialize controllers with dependencies
-  const videoController = new VideoController(
-    container.resolve(ProcessVideoUseCase)
-  );
+    // Add logging middleware
+    app.use(loggingMiddleware);
+    app.use(express.json());
 
-  const authController = container.resolve(AuthController);
-  app.use(
-    cors({
-      origin: "http://localhost:3000", // Your frontend URL
-      credentials: true, // Allow credentials
-      methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization"],
-    })
-  );
-  // Routes
-  app.use("/api/videos", createVideoRouter(videoController));
-  app.use("/api/auth", createAuthRouter(authController));
+    // Initialize controllers with dependencies
+    const videoController = new VideoController(
+      container.resolve(ProcessVideoUseCase)
+    );
 
-  app.listen(4444, () => {
-    console.log("Server running on port 4444");
-  });
+    const authController = container.resolve(AuthController);
+    app.use(
+      cors({
+        origin: "http://localhost:3000", // Your frontend URL
+        credentials: true, // Allow credentials
+        methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        allowedHeaders: ["Content-Type", "Authorization"],
+      })
+    );
+
+    // Routes
+    app.use("/api/videos", createVideoRouter(videoController));
+    app.use("/api/auth", createAuthRouter(authController));
+
+    const port = process.env.PORT || 4444;
+    app.listen(port, () => {
+      logger.info(`Server running on port ${port}`);
+    });
+  } catch (error) {
+    logger.error("Failed to start server:", error);
+    process.exit(1);
+  }
 }
 
 bootstrap().catch((err) => {
-  console.error("Failed to start server:", err);
+  logger.error("Unhandled error:", err);
   process.exit(1);
 });

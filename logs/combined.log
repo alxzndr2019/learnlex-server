@@ -1,0 +1,5 @@
+2025-01-31T09:04:51.444Z [[32minfo[39m]: Connected to MongoDB successfully
+2025-01-31T09:04:51.452Z [[32minfo[39m]: Server running on port 4444
+2025-01-31T09:04:58.790Z [[32minfo[39m]: Connected to MongoDB successfully
+2025-01-31T09:04:58.799Z [[32minfo[39m]: Server running on port 4444
+2025-01-31T09:05:13.596Z [[32minfo[39m]: GET / 404 139 - 15.569 ms

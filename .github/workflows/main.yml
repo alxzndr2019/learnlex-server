@@ -12,6 +12,18 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: "18"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build application
+        run: npm run build
+
       - name: Validate Secrets
         run: |
           if [ -z "${{ secrets.OCI_SSH_PRIVATE_KEY }}" ]; then
@@ -28,7 +40,6 @@ jobs:
           echo "${{ secrets.OCI_SSH_PRIVATE_KEY }}" > private_key
           chmod 600 private_key
 
-          # Ensure ~/.ssh exists before writing known_hosts
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
 
@@ -37,13 +48,14 @@ jobs:
 
       - name: Deploy to OCI Instance
         run: |
+          # Copy dist folder to server
+          scp -i private_key -r dist/ opc@${{ secrets.OCI_INSTANCE_IP }}:/home/opc/learnlex-server/
+
           ssh -i private_key opc@${{ secrets.OCI_INSTANCE_IP }} << 'ENDSSH'
             cd /home/opc/learnlex-server
             git fetch origin main
             git reset --hard origin/main
-            npm ci --omit=dev
-            npm i 
-            npm i reflect-metadata
+            npm ci --production
             pm2 reload all
             pm2 save
           ENDSSH
