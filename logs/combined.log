@@ -21,3 +21,5 @@
 2025-01-31T09:51:15.779Z [[32minfo[39m]: GET /ap/status 404 148 - 4.660 ms
 2025-01-31T09:51:28.378Z [[32minfo[39m]: GET /api/status 200 425 - 4880.104 ms
 2025-01-31T09:51:29.335Z [[32minfo[39m]: GET /favicon.ico 404 150 - 0.447 ms
+2025-01-31T09:57:41.163Z [[32minfo[39m]: Connected to MongoDB successfully
+2025-01-31T09:57:41.172Z [[32minfo[39m]: Server running on port 4444

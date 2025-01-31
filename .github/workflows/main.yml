@@ -56,6 +56,13 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             npm ci --production
-            pm2 reload all
+            
+            # Stop the existing PM2 process if it exists
+            pm2 stop learnlex-server || true
+            
+            # Start the application (adjust the start script according to your package.json)
+            pm2 start npm --name "learnlex-server" -- start
+            
+            # Save the PM2 process list
             pm2 save
           ENDSSH
