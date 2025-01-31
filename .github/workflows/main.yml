@@ -42,6 +42,8 @@ jobs:
             git fetch origin main
             git reset --hard origin/main
             npm ci --omit=dev
-            npm run build
+            npm i 
+            npm i reflect-metadata
             pm2 reload all
+            pm2 save
           ENDSSH
