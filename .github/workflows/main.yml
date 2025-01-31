@@ -20,8 +20,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Build the app (if applicable)
-        run: npm run build  # Change based on your project
+      # - name: Build the app (if applicable)
+      #   run: npm run build  # Change based on your project
 
       - name: Deploy to OCI
         env:
@@ -30,7 +30,7 @@ jobs:
         run: |
           echo "$SSH_PRIVATE_KEY" > private_key && chmod 600 private_key
           ssh -o StrictHostKeyChecking=no -i private_key opc@$OCI_INSTANCE_IP << 'EOF'
-            cd /home/opc/your-app-directory
+            cd /home/opc/learnlex-server
             git pull origin main
             npm install
             npm run build  # Modify based on your setup
