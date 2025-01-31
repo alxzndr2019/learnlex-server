@@ -31,8 +31,6 @@ container.register("AIService", {
   useFactory: () => new OpenAIService(config.openaiKey),
 });
 
-// TODO: Add cors
-
 async function bootstrap() {
   // Connect to MongoDB
   await mongoose.connect(config.mongoUri);
