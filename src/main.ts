@@ -13,10 +13,12 @@ import { OpenAIService } from "./infrastructure/external/openai-service";
 import { ProcessVideoUseCase } from "./application/use-cases/process-video";
 import { createVideoRouter } from "./presentation/routes/video.routes";
 import { createAuthRouter } from "./presentation/routes/auth.routes";
+import { createStatusRouter } from "./presentation/routes/status.routes";
+import { StatusController } from "./presentation/controllers/status.controller";
 import { loggingMiddleware } from "./presentation/middlewares/logging";
 import logger from "./utils/logger";
 
-// Configure DI
+// Register repositories
 container.register("VideoSessionRepository", {
   useClass: MongoVideoSessionRepository,
 });
@@ -25,12 +27,31 @@ container.register("UserRepository", {
   useClass: MongoUserRepository,
 });
 
+// Register services
 container.register("YoutubeService", {
   useClass: YoutubeApiService,
 });
 
 container.register("AIService", {
   useFactory: () => new OpenAIService(config.openaiKey),
+});
+
+// Register use cases
+container.register(ProcessVideoUseCase, {
+  useClass: ProcessVideoUseCase,
+});
+
+// Register controllers
+container.register(VideoController, {
+  useClass: VideoController,
+});
+
+container.register(AuthController, {
+  useClass: AuthController,
+});
+
+container.register(StatusController, {
+  useClass: StatusController,
 });
 
 async function bootstrap() {
@@ -46,15 +67,14 @@ async function bootstrap() {
     app.use(express.json());
 
     // Initialize controllers with dependencies
-    const videoController = new VideoController(
-      container.resolve(ProcessVideoUseCase)
-    );
-
+    const videoController = container.resolve(VideoController);
     const authController = container.resolve(AuthController);
+    const statusController = container.resolve(StatusController);
+
     app.use(
       cors({
-        origin: "http://localhost:3000", // Your frontend URL
-        credentials: true, // Allow credentials
+        origin: config.clientUrl,
+        credentials: true,
         methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allowedHeaders: ["Content-Type", "Authorization"],
       })
@@ -63,8 +83,9 @@ async function bootstrap() {
     // Routes
     app.use("/api/videos", createVideoRouter(videoController));
     app.use("/api/auth", createAuthRouter(authController));
+    app.use("/api/status", createStatusRouter(statusController));
 
-    const port = process.env.PORT || 4444;
+    const port = process.env.PORT ?? 4444;
     app.listen(port, () => {
       logger.info(`Server running on port ${port}`);
     });

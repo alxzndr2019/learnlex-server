@@ -1,0 +1,8 @@
+2025-01-31T09:46:29.482Z [[31merror[39m]: Failed to start server: Attempted to construct an undefined constructor. Could mean a circular dependency problem. Try using `delay` function.
+2025-01-31T09:46:52.801Z [[31merror[39m]: Failed to start server: Attempted to construct an undefined constructor. Could mean a circular dependency problem. Try using `delay` function.
+2025-01-31T09:48:18.065Z [[31merror[39m]: Failed to start server: TypeInfo not known for "VideoController"
+2025-01-31T09:48:33.526Z [[31merror[39m]: Failed to start server: TypeInfo not known for "VideoController"
+2025-01-31T09:49:22.094Z [[31merror[39m]: Failed to start server: TypeInfo not known for "VideoController"
+2025-01-31T09:49:27.343Z [[31merror[39m]: Failed to start server: TypeInfo not known for "VideoController"
+2025-01-31T09:49:35.729Z [[31merror[39m]: Failed to start server: TypeInfo not known for "VideoController"
+2025-01-31T09:50:27.988Z [[31merror[39m]: Failed to start server: TypeInfo not known for "VideoController"

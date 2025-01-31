@@ -3,3 +3,21 @@
 2025-01-31T09:04:58.790Z [[32minfo[39m]: Connected to MongoDB successfully
 2025-01-31T09:04:58.799Z [[32minfo[39m]: Server running on port 4444
 2025-01-31T09:05:13.596Z [[32minfo[39m]: GET / 404 139 - 15.569 ms
+2025-01-31T09:46:29.469Z [[32minfo[39m]: Connected to MongoDB successfully
+2025-01-31T09:46:52.787Z [[32minfo[39m]: Connected to MongoDB successfully
+2025-01-31T09:48:14.091Z [[32minfo[39m]: Connected to MongoDB successfully
+2025-01-31T09:48:14.109Z [[32minfo[39m]: Server running on port 4444
+2025-01-31T09:48:18.056Z [[32minfo[39m]: Connected to MongoDB successfully
+2025-01-31T09:48:33.516Z [[32minfo[39m]: Connected to MongoDB successfully
+2025-01-31T09:49:22.083Z [[32minfo[39m]: Connected to MongoDB successfully
+2025-01-31T09:49:27.330Z [[32minfo[39m]: Connected to MongoDB successfully
+2025-01-31T09:49:35.719Z [[32minfo[39m]: Connected to MongoDB successfully
+2025-01-31T09:50:27.976Z [[32minfo[39m]: Connected to MongoDB successfully
+2025-01-31T09:50:38.115Z [[32minfo[39m]: Connected to MongoDB successfully
+2025-01-31T09:50:38.128Z [[32minfo[39m]: Server running on port 4444
+2025-01-31T09:50:47.919Z [[32minfo[39m]: Connected to MongoDB successfully
+2025-01-31T09:50:47.933Z [[32minfo[39m]: Server running on port 4444
+2025-01-31T09:51:08.621Z [[32minfo[39m]: GET / 404 139 - 9.403 ms
+2025-01-31T09:51:15.779Z [[32minfo[39m]: GET /ap/status 404 148 - 4.660 ms
+2025-01-31T09:51:28.378Z [[32minfo[39m]: GET /api/status 200 425 - 4880.104 ms
+2025-01-31T09:51:29.335Z [[32minfo[39m]: GET /favicon.ico 404 150 - 0.447 ms

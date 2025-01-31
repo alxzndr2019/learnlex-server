@@ -1,8 +1,10 @@
 import { Request, Response } from "express";
+import { injectable } from "tsyringe";
 import { ProcessVideoUseCase } from "../../application/use-cases/process-video";
 import { ProcessVideoDTO } from "../dto/process-video.dto";
 import { ValidationError, InfrastructureError } from "../../core/exceptions";
 
+@injectable()
 export class VideoController {
   constructor(private readonly processVideoUseCase: ProcessVideoUseCase) {}
 
