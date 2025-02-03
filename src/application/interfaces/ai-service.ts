@@ -1,5 +1,6 @@
 import { TestQuestion } from "../../core/entities/test-question";
 
+//arigato
 export interface AIService {
   generateSummary(text: string): Promise<string>;
   generateQuestions(context: string): Promise<TestQuestion[]>;
