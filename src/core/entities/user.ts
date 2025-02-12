@@ -5,6 +5,7 @@ export class User {
     public name: string,
     public picture: string,
     public googleId: string,
+    public stripeCustomerId?: string,
     public tokens: number = 5,
     public completedSessions: string[] = [],
     public readonly createdAt: Date = new Date()

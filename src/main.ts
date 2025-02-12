@@ -1,5 +1,6 @@
 import "reflect-metadata";
 import express from "express";
+import cookieParser from "cookie-parser";
 import mongoose from "mongoose";
 const cors = require("cors");
 import { container } from "tsyringe";
@@ -17,7 +18,9 @@ import { createStatusRouter } from "./presentation/routes/status.routes";
 import { StatusController } from "./presentation/controllers/status.controller";
 import { loggingMiddleware } from "./presentation/middlewares/logging";
 import logger from "./utils/logger";
-
+import { MongoTestQuestionRepository } from "./infrastructure/database/mongodb/repositories/test-question-repository";
+import { DefaultVideoService } from "./infrastructure/services/video-service";
+//please work
 // Register repositories
 container.register("VideoSessionRepository", {
   useClass: MongoVideoSessionRepository,
@@ -27,6 +30,10 @@ container.register("UserRepository", {
   useClass: MongoUserRepository,
 });
 
+container.register("TestQuestionRepository", {
+  useClass: MongoTestQuestionRepository,
+});
+
 // Register services
 container.register("YoutubeService", {
   useClass: YoutubeApiService,
@@ -34,6 +41,10 @@ container.register("YoutubeService", {
 
 container.register("AIService", {
   useFactory: () => new OpenAIService(config.openaiKey),
+});
+
+container.register("VideoService", {
+  useClass: DefaultVideoService,
 });
 
 // Register use cases
@@ -65,7 +76,7 @@ async function bootstrap() {
     // Add logging middleware
     app.use(loggingMiddleware);
     app.use(express.json());
-
+    app.use(cookieParser());
     // Initialize controllers with dependencies
     const videoController = container.resolve(VideoController);
     const authController = container.resolve(AuthController);

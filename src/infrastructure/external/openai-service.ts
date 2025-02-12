@@ -30,14 +30,28 @@ export class OpenAIService implements AIService {
     const prompt = `Generate 5 multiple choice questions with explanations.
     Context: ${context}
     Format: JSON array with question, choices, answer (index), explanation
-    Language: English`;
+    Language: English
+    Return ONLY a valid JSON array, with no markdown formatting or additional text.`;
 
-    const response = await this.openai.chat.completions.create({
-      model: "gpt-3.5-turbo",
-      messages: [{ role: "user", content: prompt }],
-    });
+    try {
+      const response = await this.openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "user", content: prompt }],
+      });
 
-    return JSON.parse(response.choices[0].message.content || "[]");
+      const content = response.choices[0].message.content || "[]";
+      // Remove any markdown code block formatting if present
+      const cleanContent = content
+        .replace(/```json\n?/g, "")
+        .replace(/```\n?/g, "")
+        .replace(/\n/g, "")
+        .trim();
+
+      return JSON.parse(cleanContent);
+    } catch (error) {
+      console.error("Error generating questions:", error);
+      return [];
+    }
   }
 
   async explainAnswer(question: string): Promise<string> {

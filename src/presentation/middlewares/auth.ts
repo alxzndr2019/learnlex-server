@@ -5,12 +5,14 @@ import { config } from "../../config";
 declare global {
   namespace Express {
     interface Request {
-      user:
-        | {
-            userId: string;
-            email: string;
-          }
-        | undefined;
+      user?: {
+        id: string;
+        email: string;
+        name: string;
+        picture?: string;
+        tokens: number;
+        stripeCustomerId?: string;
+      };
     }
   }
 }
@@ -20,17 +22,21 @@ export const authenticateJWT = (
   res: Response,
   next: NextFunction
 ): void => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader) {
+  const tokenFromCookie = req.cookies.token;
+  if (!tokenFromCookie) {
     res.status(401).json({ error: "No token provided" });
     return;
   }
 
-  const token = authHeader.split(" ")[1];
+  const token = tokenFromCookie;
   try {
     const decoded = jwt.verify(token, config.jwt.secret) as {
-      userId: string;
+      id: string;
       email: string;
+      name: string;
+      picture?: string;
+      tokens: number;
+      stripeCustomerId?: string;
     };
     req.user = decoded;
     next();

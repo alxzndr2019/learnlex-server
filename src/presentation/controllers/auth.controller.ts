@@ -62,19 +62,28 @@ export class AuthController {
         });
       }
 
-      const accessToken = jwt.sign(
-        { userId: user.id, email: user.email },
+      // Set token as HTTP-only cookie
+      const token = jwt.sign(
+        { id: user.id, email: user.email },
         config.jwt.secret,
-        { expiresIn: "1d" }
+        {
+          expiresIn: "7d",
+        }
       );
 
-      res.redirect(
-        `${
-          config.clientUrl
-        }/auth/callback?token=${accessToken}&user=${encodeURIComponent(
-          JSON.stringify(user)
-        )}`
-      );
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "lax",
+        maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      });
+
+      // Redirect with user info only (token will be in cookie)
+      const redirectUrl = `${
+        config.clientUrl
+      }/auth/callback?user=${encodeURIComponent(JSON.stringify(user))}`;
+
+      res.redirect(redirectUrl);
     } catch (error) {
       console.error("Google auth error:", error);
       res.redirect(`${config.clientUrl}/auth/error`);
@@ -83,7 +92,7 @@ export class AuthController {
 
   getCurrentUser = async (req: Request, res: Response): Promise<void> => {
     try {
-      const user = await this.userRepository.findById(req.user!.userId);
+      const user = await this.userRepository.findById(req.user!.id);
       if (!user) {
         res.status(404).json({ error: "User not found" });
         return;

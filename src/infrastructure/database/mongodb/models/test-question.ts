@@ -11,13 +11,18 @@ interface TestQuestionDocument extends Document {
 }
 
 const schema = new mongoose.Schema({
-  sessionId: { type: mongoose.Types.ObjectId, required: true },
-  question: String,
-  choices: [String],
-  correctAnswer: Number,
-  explanation: String,
-  userAnswer: Number,
-  isCorrect: Boolean,
+  sessionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "VideoSession",
+  },
+  question: { type: String, required: true },
+  choices: { type: [String], required: true },
+  correctAnswer: { type: Number, required: true },
+  explanation: { type: String, required: true },
+  userAnswer: { type: Number },
+  isCorrect: { type: Boolean },
+  createdAt: { type: Date, default: Date.now },
 });
 
 export const TestQuestionModel = mongoose.model<TestQuestionDocument>(

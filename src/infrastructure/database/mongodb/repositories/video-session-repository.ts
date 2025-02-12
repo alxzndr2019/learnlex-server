@@ -22,6 +22,13 @@ export class MongoVideoSessionRepository implements VideoSessionRepository {
     return session ? this.toDomainEntity(session) : null;
   }
 
+  async findByUserId(userId: string): Promise<VideoSession[]> {
+    const sessions = await VideoSessionModel.find({ userId }).sort({
+      lastAccessed: -1,
+    });
+    return sessions.map((session) => this.toDomainEntity(session));
+  }
+
   async updateSession(
     id: string,
     updates: Partial<VideoSession>
@@ -36,6 +43,10 @@ export class MongoVideoSessionRepository implements VideoSessionRepository {
     return this.toDomainEntity(updatedSession);
   }
 
+  async deleteSession(id: string): Promise<void> {
+    await VideoSessionModel.findByIdAndDelete(id);
+  }
+
   private toDomainEntity(doc: any): VideoSession {
     return new VideoSession(
       doc._id.toString(),
@@ -46,7 +57,9 @@ export class MongoVideoSessionRepository implements VideoSessionRepository {
       doc.createdAt,
       doc.completedAt,
       doc.questions,
-      doc.keyPoints
+      doc.keyPoints,
+      doc.progress,
+      doc.lastAccessed
     );
   }
 }

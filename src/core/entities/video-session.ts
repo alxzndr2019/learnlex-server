@@ -12,6 +12,8 @@ export class VideoSession {
     public readonly createdAt: Date,
     public completedAt?: Date,
     public questions?: TestQuestion[],
-    public keyPoints?: string[]
+    public keyPoints?: string[],
+    public progress: number = 0,
+    public lastAccessed: Date = new Date()
   ) {}
 }

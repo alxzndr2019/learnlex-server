@@ -9,6 +9,8 @@ export interface VideoSessionDocument extends Document {
   completedAt?: Date;
   questions?: TestQuestion[];
   keyPoints?: string[];
+  progress: number;
+  lastAccessed: Date;
 }
 
 const videoSessionSchema = new mongoose.Schema({
@@ -25,6 +27,8 @@ const videoSessionSchema = new mongoose.Schema({
   completedAt: Date,
   questions: { type: Array, default: [] },
   keyPoints: { type: Array, default: [] },
+  progress: { type: Number, default: 0 },
+  lastAccessed: { type: Date, default: Date.now },
 });
 
 export const VideoSessionModel = mongoose.model<VideoSessionDocument>(
