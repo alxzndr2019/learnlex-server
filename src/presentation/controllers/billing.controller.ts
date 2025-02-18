@@ -1,19 +1,15 @@
 import { Request, Response } from "express";
 import { injectable, inject } from "tsyringe";
 import { UserRepository } from "../../application/interfaces/user-repository";
-import Stripe from "stripe";
+import { MockPaymentService } from "../../infrastructure/services/mock-payment-service";
 
 @injectable()
 export class BillingController {
-  private stripe: Stripe;
-
   constructor(
-    @inject("UserRepository") private readonly userRepository: UserRepository
-  ) {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: "2025-01-27.acacia",
-    });
-  }
+    @inject("UserRepository") private readonly userRepository: UserRepository,
+    @inject("PaymentService")
+    private readonly paymentService: MockPaymentService
+  ) {}
 
   getCurrentPlan = async (req: Request, res: Response) => {
     try {
@@ -26,10 +22,7 @@ export class BillingController {
         return res.status(404).json({ error: "User not found" });
       }
 
-      const subscription = await this.stripe.subscriptions.list({
-        customer: user.stripeCustomerId,
-        limit: 1,
-      });
+      const subscription = await this.paymentService.listSubscriptions(user.id);
 
       if (!subscription.data.length) {
         return res.json({
@@ -70,41 +63,23 @@ export class BillingController {
       const { plan, interval } = req.body;
       const user = await this.userRepository.findById(req.user.id);
 
-      if (!user || !user.stripeCustomerId) {
+      if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      // Get price ID based on plan and interval
-      const prices = await this.stripe.prices.list({
-        lookup_keys: [`${plan}_${interval}`],
-        active: true,
-      });
-
-      if (!prices.data.length) {
-        return res.status(400).json({ error: "Invalid plan selected" });
-      }
-
-      const subscription = await this.stripe.subscriptions.list({
-        customer: user.stripeCustomerId,
-        limit: 1,
-      });
+      const priceId = `${plan}_${interval}`;
+      const subscription = await this.paymentService.listSubscriptions(user.id);
 
       if (subscription.data.length) {
         // Update existing subscription
-        await this.stripe.subscriptions.update(subscription.data[0].id, {
-          items: [
-            {
-              id: subscription.data[0].items.data[0].id,
-              price: prices.data[0].id,
-            },
-          ],
-        });
+        await this.paymentService.updateSubscription(
+          subscription.data[0].id,
+          priceId,
+          plan
+        );
       } else {
         // Create new subscription
-        await this.stripe.subscriptions.create({
-          customer: user.stripeCustomerId,
-          items: [{ price: prices.data[0].id }],
-        });
+        await this.paymentService.createSubscription(user.id, priceId, plan);
       }
 
       res.json({ success: true });
@@ -121,23 +96,22 @@ export class BillingController {
       }
 
       const user = await this.userRepository.findById(req.user.id);
-      if (!user || !user.stripeCustomerId) {
+      if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      const paymentMethods = await this.stripe.paymentMethods.list({
-        customer: user.stripeCustomerId,
-        type: "card",
-      });
+      const paymentMethods = await this.paymentService.listPaymentMethods(
+        user.id
+      );
 
       res.json({
         methods: paymentMethods.data.map((method) => ({
           id: method.id,
           type: method.type,
-          last4: method.card?.last4,
-          brand: method.card?.brand,
-          expiryMonth: method.card?.exp_month,
-          expiryYear: method.card?.exp_year,
+          last4: method.last4,
+          brand: method.brand,
+          expiryMonth: method.exp_month,
+          expiryYear: method.exp_year,
           isDefault: method.metadata?.isDefault === "true",
         })),
       });
@@ -156,13 +130,11 @@ export class BillingController {
       const { paymentMethodId } = req.body;
       const user = await this.userRepository.findById(req.user.id);
 
-      if (!user || !user.stripeCustomerId) {
+      if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      await this.stripe.paymentMethods.attach(paymentMethodId, {
-        customer: user.stripeCustomerId,
-      });
+      await this.paymentService.attachPaymentMethod(paymentMethodId, user.id);
 
       res.json({ success: true });
     } catch (error) {
@@ -174,7 +146,7 @@ export class BillingController {
   removePaymentMethod = async (req: Request, res: Response) => {
     try {
       const { id } = req.params;
-      await this.stripe.paymentMethods.detach(id);
+      await this.paymentService.detachPaymentMethod(id);
       res.json({ success: true });
     } catch (error) {
       console.error("Error removing payment method:", error);
@@ -191,15 +163,15 @@ export class BillingController {
       const { limit = 10, offset = 0 } = req.query;
       const user = await this.userRepository.findById(req.user.id);
 
-      if (!user || !user.stripeCustomerId) {
+      if (!user) {
         return res.status(404).json({ error: "User not found" });
       }
 
-      const charges = await this.stripe.charges.list({
-        customer: user.stripeCustomerId,
-        limit: Number(limit),
-        starting_after: offset ? String(offset) : undefined,
-      });
+      const charges = await this.paymentService.listTransactions(
+        user.id,
+        Number(limit),
+        offset ? String(offset) : undefined
+      );
 
       res.json({
         transactions: charges.data.map((charge) => ({

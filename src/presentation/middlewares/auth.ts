@@ -2,21 +2,6 @@ import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
 import { config } from "../../config";
 
-declare global {
-  namespace Express {
-    interface Request {
-      user?: {
-        id: string;
-        email: string;
-        name: string;
-        picture?: string;
-        tokens: number;
-        stripeCustomerId?: string;
-      };
-    }
-  }
-}
-
 export const authenticateJWT = (
   req: Request,
   res: Response,
@@ -30,14 +15,7 @@ export const authenticateJWT = (
 
   const token = tokenFromCookie;
   try {
-    const decoded = jwt.verify(token, config.jwt.secret) as {
-      id: string;
-      email: string;
-      name: string;
-      picture?: string;
-      tokens: number;
-      stripeCustomerId?: string;
-    };
+    const decoded = jwt.verify(token, config.jwt.secret) as Express.User;
     req.user = decoded;
     next();
   } catch (error) {

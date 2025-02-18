@@ -1,12 +1,18 @@
-declare namespace Express {
-  export interface Request {
-    user?: {
+export {};
+
+declare global {
+  namespace Express {
+    interface User {
       id: string;
       email: string;
       name: string;
-      picture?: string;
+      picture: string;
       tokens: number;
-      stripeCustomerId?: string;
-    };
+      role: string;
+    }
+
+    interface Request {
+      user?: User;
+    }
   }
 }

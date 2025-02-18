@@ -20,6 +20,7 @@ import { loggingMiddleware } from "./presentation/middlewares/logging";
 import logger from "./utils/logger";
 import { MongoTestQuestionRepository } from "./infrastructure/database/mongodb/repositories/test-question-repository";
 import { DefaultVideoService } from "./infrastructure/services/video-service";
+import { MockPaymentService } from "./infrastructure/services/mock-payment-service";
 //please work
 // Register repositories
 container.register("VideoSessionRepository", {
@@ -40,7 +41,11 @@ container.register("YoutubeService", {
 });
 
 container.register("AIService", {
-  useFactory: () => new OpenAIService(config.openaiKey),
+  useClass: OpenAIService,
+});
+
+container.register("PaymentService", {
+  useClass: MockPaymentService,
 });
 
 container.register("VideoService", {

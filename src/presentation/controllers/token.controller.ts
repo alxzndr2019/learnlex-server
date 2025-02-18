@@ -1,19 +1,15 @@
 import { Request, Response } from "express";
 import { injectable, inject } from "tsyringe";
 import { UserRepository } from "../../application/interfaces/user-repository";
-import Stripe from "stripe";
+import { MockPaymentService } from "../../infrastructure/services/mock-payment-service";
 
 @injectable()
 export class TokenController {
-  private stripe: Stripe;
-
   constructor(
-    @inject("UserRepository") private readonly userRepository: UserRepository
-  ) {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: "2025-01-27.acacia",
-    });
-  }
+    @inject("UserRepository") private readonly userRepository: UserRepository,
+    @inject("PaymentService")
+    private readonly paymentService: MockPaymentService
+  ) {}
 
   getBalance = async (req: Request, res: Response) => {
     try {
@@ -61,14 +57,13 @@ export class TokenController {
       const totalAmount = amount * unitPrice;
 
       // Create payment intent
-      const paymentIntent = await this.stripe.paymentIntents.create({
-        amount: totalAmount,
-        currency: "usd",
-        customer: user.stripeCustomerId,
-        payment_method: paymentMethodId,
-        confirm: true,
-        description: `Purchase of ${amount} tokens`,
-      });
+      const paymentIntent = await this.paymentService.createPaymentIntent(
+        totalAmount,
+        "usd",
+        user.id,
+        paymentMethodId,
+        `Purchase of ${amount} tokens`
+      );
 
       if (paymentIntent.status === "succeeded") {
         // Update user's token balance
