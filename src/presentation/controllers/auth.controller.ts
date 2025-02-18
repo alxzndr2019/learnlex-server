@@ -58,6 +58,7 @@ export class AuthController {
           picture: payload.picture!,
           googleId: payload.sub,
           tokens: 5,
+          role: "user",
           completedSessions: [],
           updatedAt: new Date(),
         });
