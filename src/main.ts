@@ -36,12 +36,12 @@ container.register("TestQuestionRepository", {
 });
 
 // Register services
-container.register("YoutubeService", {
-  useClass: YoutubeApiService,
-});
-
 container.register("AIService", {
   useClass: OpenAIService,
+});
+
+container.register("YoutubeService", {
+  useClass: YoutubeApiService,
 });
 
 container.register("PaymentService", {

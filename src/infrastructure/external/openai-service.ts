@@ -1,18 +1,22 @@
 import { injectable } from "tsyringe";
-import { OpenAI } from "openai";
+import OpenAI from "openai";
 import { AIService } from "../../application/interfaces/ai-service";
 import { TestQuestion } from "../../core/entities/test-question";
+import { config } from "../../config";
 
 @injectable()
 export class OpenAIService implements AIService {
-  private openai: OpenAI;
+  private readonly openai: OpenAI;
 
-  constructor(private apiKey: string) {
-    this.openai = new OpenAI({ apiKey });
+  constructor() {
+    this.openai = new OpenAI({
+      apiKey: config.openaiKey,
+    });
   }
 
   async generateSummary(text: string): Promise<string> {
     const completion = await this.openai.chat.completions.create({
+      model: "gpt-3.5-turbo",
       messages: [
         {
           role: "user",
@@ -20,10 +24,9 @@ export class OpenAIService implements AIService {
           Language: English`,
         },
       ],
-      model: "gpt-3.5-turbo",
     });
 
-    return completion.choices[0].message.content || "No summary available";
+    return completion.choices[0].message?.content || "No summary available";
   }
 
   async generateQuestions(context: string): Promise<TestQuestion[]> {
@@ -39,7 +42,7 @@ export class OpenAIService implements AIService {
         messages: [{ role: "user", content: prompt }],
       });
 
-      const content = response.choices[0].message.content || "[]";
+      const content = response.choices[0].message?.content || "[]";
       // Remove any markdown code block formatting if present
       const cleanContent = content
         .replace(/```json\n?/g, "")
@@ -71,7 +74,7 @@ export class OpenAIService implements AIService {
       messages: [{ role: "user", content: prompt }],
     });
 
-    return response.choices[0].message.content || " ";
+    return response.choices[0].message?.content || " ";
   }
 
   async explainConcept(concept: string): Promise<string> {
@@ -85,7 +88,7 @@ export class OpenAIService implements AIService {
       messages: [{ role: "user", content: prompt }],
     });
 
-    return response.choices[0].message.content || " ";
+    return response.choices[0].message?.content || " ";
   }
 
   async explainInKeyPoints(context: string): Promise<string> {
@@ -101,7 +104,7 @@ export class OpenAIService implements AIService {
         model: "gpt-3.5-turbo",
         messages: [{ role: "user", content: prompt }],
       });
-      const content = response.choices[0].message.content || "[]";
+      const content = response.choices[0].message?.content || "[]";
       // Remove any markdown code block formatting if present
       const cleanContent = content
         .replace(/json\n?/g, "")
