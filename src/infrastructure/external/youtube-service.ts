@@ -10,7 +10,7 @@ export class YoutubeApiService implements YoutubeService {
     if (!match) throw new Error("Invalid YouTube URL");
     return match[1];
   }
-
+  // i am great
   async getTranscript(videoId: string): Promise<string> {
     try {
       const transcripts = await YoutubeTranscript.fetchTranscript(videoId);
