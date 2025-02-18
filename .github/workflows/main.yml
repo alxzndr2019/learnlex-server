@@ -18,6 +18,24 @@ jobs:
           node-version: "18"
           cache: "npm"
 
+      - name: Create .env file
+        run: |
+          # Loop through all secrets that start with 'ENV_'
+          for secret in $(env | grep '^SECRETS_ENV_' | cut -d= -f1); do
+            # Remove SECRETS_ENV_ prefix to get the actual env var name
+            env_name=${secret#SECRETS_ENV_}
+            # Get the value and write to .env file
+            echo "$env_name=${!secret}" >> .env
+          done
+        env:
+          SECRETS_ENV_CLIENT_URL: ${{ secrets.SECRETS_ENV_CLIENT_URL }}
+          SECRETS_ENV_GOOGLE_CLIENT_ID: ${{ secrets.SECRETS_ENV_GOOGLE_CLIENT_ID }}
+          SECRETS_ENV_GOOGLE_CLIENT_SECRET: ${{ secrets.SECRETS_ENV_GOOGLE_CLIENT_SECRET }}
+          SECRETS_ENV_GOOGLE_REDIRECT_URI: ${{ secrets.SECRETS_ENV_GOOGLE_REDIRECT_URI }}
+          SECRETS_ENV_JWT_SECRET: ${{ secrets.SECRETS_ENV_JWT_SECRET }}
+          SECRETS_ENV_MONGO_URI: ${{ secrets.SECRETS_ENV_MONGO_URI }}
+          SECRETS_ENV_OPENAI_KEY: ${{ secrets.SECRETS_ENV_OPENAI_KEY }}
+
       - name: Install dependencies
         run: npm ci
 
@@ -34,35 +52,44 @@ jobs:
             echo "OCI_INSTANCE_IP secret is missing!"
             exit 1
           fi
+          # Validate all environment secrets
+          for secret in $(env | grep '^SECRETS_ENV_' | cut -d= -f1); do
+            if [ -z "${!secret}" ]; then
+              echo "${secret#SECRETS_ENV_} secret is missing!"
+              exit 1
+            fi
+          done
+        env:
+          SECRETS_ENV_CLIENT_URL: ${{ secrets.SECRETS_ENV_CLIENT_URL }}
+          SECRETS_ENV_GOOGLE_CLIENT_ID: ${{ secrets.SECRETS_ENV_GOOGLE_CLIENT_ID }}
+          SECRETS_ENV_GOOGLE_CLIENT_SECRET: ${{ secrets.SECRETS_ENV_GOOGLE_CLIENT_SECRET }}
+          SECRETS_ENV_GOOGLE_REDIRECT_URI: ${{ secrets.SECRETS_ENV_GOOGLE_REDIRECT_URI }}
+          SECRETS_ENV_JWT_SECRET: ${{ secrets.SECRETS_ENV_JWT_SECRET }}
+          SECRETS_ENV_MONGO_URI: ${{ secrets.SECRETS_ENV_MONGO_URI }}
+          SECRETS_ENV_OPENAI_KEY: ${{ secrets.SECRETS_ENV_OPENAI_KEY }}
 
       - name: Set up SSH
         run: |
           echo "${{ secrets.OCI_SSH_PRIVATE_KEY }}" > private_key
           chmod 600 private_key
-
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-
           ssh-keyscan ${{ secrets.OCI_INSTANCE_IP }} >> ~/.ssh/known_hosts
           chmod 644 ~/.ssh/known_hosts
 
       - name: Deploy to OCI Instance
         run: |
-          # Copy dist folder to server
-          scp -i private_key -r dist/ opc@${{ secrets.OCI_INSTANCE_IP }}:/home/opc/learnlex-server/
-
+          # Copy dist folder and .env to server
+          scp -i private_key -r dist/ .env opc@${{ secrets.OCI_INSTANCE_IP }}:/home/opc/learnlex-server/
           ssh -i private_key opc@${{ secrets.OCI_INSTANCE_IP }} << 'ENDSSH'
-            cd /home/opc/learnlex-server
-            git fetch origin main
-            git reset --hard origin/main
-            npm ci --production
-            
-            # Stop the existing PM2 process if it exists
-            pm2 stop learnlex-server || true
-            
-            # Start the application (adjust the start script according to your package.json)
-            pm2 start npm --name "learnlex-server" -- start
-            
-            # Save the PM2 process list
-            pm2 save
+          cd /home/opc/learnlex-server
+          git fetch origin main
+          git reset --hard origin/main
+          npm ci --production
+          # Stop the existing PM2 process if it exists
+          pm2 stop learnlex-server || true
+          # Start the application (adjust the start script according to your package.json)
+          pm2 start npm --name "learnlex-server" -- start
+          # Save the PM2 process list
+          pm2 save
           ENDSSH
