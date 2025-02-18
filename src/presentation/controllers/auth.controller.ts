@@ -58,7 +58,9 @@ export class AuthController {
           picture: payload.picture!,
           googleId: payload.sub,
           tokens: 5,
+          role: "user",
           completedSessions: [],
+          updatedAt: new Date(),
         });
       }
 
@@ -85,6 +87,7 @@ export class AuthController {
 
       res.redirect(redirectUrl);
     } catch (error) {
+      console.log(error);
       console.error("Google auth error:", error);
       res.redirect(`${config.clientUrl}/auth/error`);
     }
