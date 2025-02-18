@@ -1,7 +1,23 @@
 import { injectable } from "tsyringe";
-import { UserRepository } from "../../../../application/interfaces/user-repository";
+import {
+  UserRepository,
+  TokenUsage,
+} from "../../../../application/interfaces/user-repository";
 import { User } from "../../../../core/entities/user";
 import { UserModel } from "../models/user";
+import { Document, Types } from "mongoose";
+
+interface UserDocument extends Document {
+  _id: Types.ObjectId;
+  email: string;
+  name: string;
+  picture: string | null;
+  googleId: string;
+  tokens: number;
+  completedSessions: Types.ObjectId[];
+  tokenUsage: TokenUsage[];
+  createdAt: Date;
+}
 
 @injectable()
 export class MongoUserRepository implements UserRepository {
@@ -31,12 +47,30 @@ export class MongoUserRepository implements UserRepository {
     return this.toDomainEntity(updatedUser);
   }
 
+  async getTokenUsage(userId: string): Promise<TokenUsage[]> {
+    const user = await UserModel.findById(userId);
+    return (user?.tokenUsage || []) as TokenUsage[];
+  }
+
+  async recordTokenPurchase(
+    userId: string,
+    amount: number,
+    cost: number
+  ): Promise<void> {
+    await UserModel.findByIdAndUpdate(userId, {
+      $push: {
+        tokenUsage: { date: new Date(), amount, action: "purchase" as const },
+      },
+      $inc: { tokens: amount },
+    });
+  }
+
   private toDomainEntity(doc: any): User {
     return new User(
       doc._id.toString(),
       doc.email,
       doc.name,
-      doc.picture,
+      doc.picture || undefined,
       doc.googleId,
       doc.tokens,
       doc.completedSessions.map((id: any) => id.toString()),

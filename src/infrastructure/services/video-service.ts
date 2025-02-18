@@ -20,19 +20,16 @@ export class DefaultVideoService implements VideoService {
 
     const summary = await this.aiService.generateSummary(transcript);
     const questions = await this.aiService.generateQuestions(summary);
-    const keyPoints = await this.aiService.explainInKeyPoints(transcript);
+    const keyPointsText = await this.aiService.explainInKeyPoints(transcript);
+    const keyPoints = keyPointsText.split("\n").filter((point) => point.trim());
 
     return this.videoSessionRepository.createSession({
       userId,
       videoId,
-      title: videoDetails.title,
-      channelTitle: videoDetails.channelTitle,
-      thumbnailUrl: videoDetails.thumbnailUrl,
-      duration: videoDetails.duration,
       summary,
+      status: "ready",
       questions,
       keyPoints,
-      status: "ready",
       progress: 0,
       lastAccessed: new Date(),
     });

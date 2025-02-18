@@ -1,7 +1,7 @@
 import { Router, RequestHandler } from "express";
 import { container } from "tsyringe";
 import { TokenController } from "../controllers/token.controller";
-import { authenticateJWT } from "../middleware/auth";
+import { authenticateJWT } from "../middlewares/auth";
 
 export const createTokenRouter = () => {
   const router = Router();

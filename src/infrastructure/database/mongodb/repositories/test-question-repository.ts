@@ -5,6 +5,7 @@ import { injectable } from "tsyringe";
 import { AIService } from "../../../../application/interfaces/ai-service";
 import { VideoSessionRepository } from "../../../../application/interfaces/video-session-repository";
 import { inject } from "tsyringe";
+import { Document, Types } from "mongoose";
 
 @injectable()
 export class MongoTestQuestionRepository implements TestQuestionRepository {
@@ -84,7 +85,7 @@ export class MongoTestQuestionRepository implements TestQuestionRepository {
     });
 
     const answers = questions.map((q) => ({
-      questionId: q._id.toString(),
+      questionId: (q._id as Types.ObjectId).toString(),
       answer: q.userAnswer!,
       isCorrect: q.isCorrect!,
     }));

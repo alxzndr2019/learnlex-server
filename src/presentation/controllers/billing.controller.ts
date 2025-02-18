@@ -11,12 +11,16 @@ export class BillingController {
     @inject("UserRepository") private readonly userRepository: UserRepository
   ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: "2023-10-16",
+      apiVersion: "2025-01-27.acacia",
     });
   }
 
   getCurrentPlan = async (req: Request, res: Response) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
       const user = await this.userRepository.findById(req.user.id);
       if (!user) {
         return res.status(404).json({ error: "User not found" });
@@ -59,10 +63,14 @@ export class BillingController {
 
   updatePlan = async (req: Request, res: Response) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
       const { plan, interval } = req.body;
       const user = await this.userRepository.findById(req.user.id);
 
-      if (!user) {
+      if (!user || !user.stripeCustomerId) {
         return res.status(404).json({ error: "User not found" });
       }
 
@@ -108,8 +116,12 @@ export class BillingController {
 
   getPaymentMethods = async (req: Request, res: Response) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
       const user = await this.userRepository.findById(req.user.id);
-      if (!user) {
+      if (!user || !user.stripeCustomerId) {
         return res.status(404).json({ error: "User not found" });
       }
 
@@ -126,7 +138,7 @@ export class BillingController {
           brand: method.card?.brand,
           expiryMonth: method.card?.exp_month,
           expiryYear: method.card?.exp_year,
-          isDefault: method.metadata.isDefault === "true",
+          isDefault: method.metadata?.isDefault === "true",
         })),
       });
     } catch (error) {
@@ -137,10 +149,14 @@ export class BillingController {
 
   addPaymentMethod = async (req: Request, res: Response) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
       const { paymentMethodId } = req.body;
       const user = await this.userRepository.findById(req.user.id);
 
-      if (!user) {
+      if (!user || !user.stripeCustomerId) {
         return res.status(404).json({ error: "User not found" });
       }
 
@@ -168,10 +184,14 @@ export class BillingController {
 
   getTransactions = async (req: Request, res: Response) => {
     try {
+      if (!req.user?.id) {
+        return res.status(401).json({ error: "Unauthorized" });
+      }
+
       const { limit = 10, offset = 0 } = req.query;
       const user = await this.userRepository.findById(req.user.id);
 
-      if (!user) {
+      if (!user || !user.stripeCustomerId) {
         return res.status(404).json({ error: "User not found" });
       }
 
@@ -189,7 +209,7 @@ export class BillingController {
           description: charge.description,
           status: charge.status,
         })),
-        total: charges.total_count,
+        total: charges.has_more ? undefined : charges.data.length,
       });
     } catch (error) {
       console.error("Error fetching transactions:", error);
